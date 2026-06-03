@@ -24,9 +24,12 @@ public class Franchise {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    @Column(name = "nombre", length = 100)
+    @Column(name = "nombre", length = 100,  nullable = false, unique = true)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String name;
+
+    @Column(name = "dueño", length = 100, nullable = false)
+    private String owner;
 
     @OneToMany(mappedBy = "franchise", orphanRemoval = true)
     private Set<Branch> branches;

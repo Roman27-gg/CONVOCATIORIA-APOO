@@ -4,6 +4,7 @@ import com.ut.sucursales.model.dto.ProductDto;
 import com.ut.sucursales.service.interfaces.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/{field}")
-    public ProductDto patchProduct(@PathVariable UUID id, @PathVariable String field, @RequestParam String value) {
+    public ProductDto patchProduct(@PathVariable UUID id, @PathVariable String field, @RequestParam String value) throws BadRequestException {
         return productService.updateFieldProduct(id, field, value);
     }
 

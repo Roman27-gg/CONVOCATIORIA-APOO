@@ -28,6 +28,9 @@ public class Branch {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String address;
 
+    @Column(name = "nombre", unique = true, length = 100)
+    private String name;
+
     @ManyToOne
     @JoinColumn(name = "franchise_id")
     private Franchise franchise;

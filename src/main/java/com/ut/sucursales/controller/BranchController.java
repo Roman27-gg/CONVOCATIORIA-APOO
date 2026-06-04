@@ -4,6 +4,7 @@ import com.ut.sucursales.model.dto.BranchDto;
 import com.ut.sucursales.service.interfaces.BranchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class BranchController {
     }
 
     @PatchMapping("/{id}/{field}")
-    public BranchDto updateBranch(@PathVariable UUID id, @PathVariable String field, @RequestParam String value) {
+    public BranchDto updateBranch(@PathVariable UUID id, @PathVariable String field, @RequestParam String value) throws BadRequestException {
         return branchService.updateFieldBranch(id, field, value);
     }
 

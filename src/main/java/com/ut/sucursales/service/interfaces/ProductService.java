@@ -1,6 +1,7 @@
 package com.ut.sucursales.service.interfaces;
 
 import com.ut.sucursales.model.dto.ProductDto;
+import org.apache.coyote.BadRequestException;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,5 +17,5 @@ public interface ProductService {
 
     void deleteById(UUID id);
 
-    ProductDto updateFieldProduct(UUID id, String field, String value);
+    ProductDto updateFieldProduct(UUID id, String field, String value) throws BadRequestException;
 }

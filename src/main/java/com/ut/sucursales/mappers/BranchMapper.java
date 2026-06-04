@@ -6,8 +6,10 @@ import org.mapstruct.*;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface BranchMapper {
+    
     Branch toEntity(BranchDto branchDto);
 
+    @Mapping(target = "franchiseName", source = "franchise.name")
     BranchDto toDto(Branch branch);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

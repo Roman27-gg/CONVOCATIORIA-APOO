@@ -7,7 +7,6 @@ import com.ut.sucursales.model.dto.ProductStock;
 import com.ut.sucursales.model.dto.ProductWithMoreStock;
 import com.ut.sucursales.model.entity.Branch;
 import com.ut.sucursales.model.entity.Franchise;
-import com.ut.sucursales.model.entity.Product;
 import com.ut.sucursales.repository.BranchRepository;
 import com.ut.sucursales.repository.FranchiseRepository;
 import com.ut.sucursales.repository.ProductRepository;
@@ -17,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 

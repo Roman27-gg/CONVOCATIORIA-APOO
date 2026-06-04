@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/franquicias")
+@RequestMapping("/api/franquicias")
 @RequiredArgsConstructor
 public class FranchiseController {
 
@@ -50,8 +50,5 @@ public class FranchiseController {
     public List<ProductWithMoreStock> getProductWithHighestStockPerBranch(@PathVariable UUID id){
         return franchiseService.getProductWithHighestStockPerBranch(id);
     }
-
-
-
 
 }

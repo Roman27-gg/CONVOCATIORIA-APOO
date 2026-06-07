@@ -21,4 +21,4 @@ springdoc:
   packages-to-scan: "com.ut.empty"
   swagger-ui:
     path: /swagger
-    url: /openapi.yaml
+    url: /openapi-bundle.yml

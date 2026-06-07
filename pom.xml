@@ -115,27 +115,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.14.2</version>
-                <executions>
-                    <execution>
-                        <id>bundle-swagger</id>
-                        <goals>
-                            <goal>npx</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <arguments>
-                                @redocly/cli bundle
-                                src/main/resources/static/openapi.yml
-                                -o src/main/resources/static/openapi-bundle.yml
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>

@@ -5,6 +5,7 @@ import com.ut.sucursales.service.interfaces.BranchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class BranchController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public BranchDto createBranch(@RequestBody @Valid BranchDto branchDto) {
         return branchService.createBranch(branchDto);
     }
@@ -38,11 +40,12 @@ public class BranchController {
     }
 
     @PatchMapping("/{id}/{field}")
-    public BranchDto updateBranch(@PathVariable UUID id, @PathVariable String field, @RequestParam String value) throws BadRequestException {
+    public BranchDto updateFieldBranch(@PathVariable UUID id, @PathVariable String field, @RequestParam String value) throws BadRequestException {
         return branchService.updateFieldBranch(id, field, value);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBranch(@PathVariable UUID id) {
         branchService.deleteById(id);
     }

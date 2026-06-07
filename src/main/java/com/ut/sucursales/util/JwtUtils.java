@@ -15,10 +15,10 @@ import java.util.function.Function;
 @Component
 public class JwtUtils {
 
-    @Value("${jwt.secret}")
+    @Value("${JWT_SECRET}")
     private String secret;
 
-    @Value("${jwt.expired}")
+    @Value("${JWT_EXPIRED}")
     private long expired;
 
     public String generateToken(String subject, Map<String, Object> claims) {

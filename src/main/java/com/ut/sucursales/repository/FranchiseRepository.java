@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface FranchiseRepository extends JpaRepository<Franchise,UUID> {
 
-    boolean existByName(String name);
+    boolean existsByName(String name);
 
     Optional<Franchise> findByName(String name);
 

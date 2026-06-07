@@ -1,0 +1,899 @@
+openapi: 3.0.3
+info:
+  title: Convocatoria APO API
+  description: |
+    API REST para la gestión de franquicias, sucursales y productos.
+
+    ## Autenticación
+    Esta API utiliza **JWT Bearer Token**. Para acceder a los endpoints protegidos:
+    1. Obtén un token desde `POST /api/auth/login`
+    2. Incluye el token en el header `Authorization: Bearer <token>`
+
+    ## Módulos
+    - **Usuarios** — Autenticación y generación de tokens JWT
+    - **Franquicias** — Gestión de franquicias
+    - **Sucursales** — Gestión de sucursales asociadas a franquicias
+    - **Productos** — Gestión de productos asociados a sucursales
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Servidor local (Docker)
+security:
+  - BearerAuth: []
+tags:
+  - name: Usuarios
+    description: Endpoints de autenticación
+  - name: Franquicias
+    description: Gestión de franquicias
+  - name: Sucursales
+    description: Gestión de sucursales
+  - name: Productos
+    description: Gestión de productos
+paths:
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Usuarios
+      summary: Registrar un nuevo usuario
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Usuarios
+      summary: Autenticarse y obtener token JWT
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Autenticación exitosa. Retorna el token JWT Bearer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/franquicias:
+    get:
+      tags:
+        - Franquicias
+      summary: Obtener todas las franquicias
+      operationId: getFranchises
+      responses:
+        '200':
+          description: Lista de franquicias obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FranchiseDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Franquicias
+      summary: Crear una nueva franquicia
+      operationId: createFranchise
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FranchiseRequest'
+      responses:
+        '201':
+          description: Franquicia creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FranchiseDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/franquicias/{id}:
+    get:
+      tags:
+        - Franquicias
+      summary: Obtener una franquicia por ID
+      operationId: getFranchise
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+      responses:
+        '200':
+          description: Franquicia encontrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FranchiseDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - Franquicias
+      summary: Modificar el nombre de una franquicia
+      operationId: modifyFranchiseName
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+        - name: name
+          in: query
+          required: true
+          description: Nuevo nombre para la franquicia (debe ser único)
+          schema:
+            type: string
+          example: Nueva Franquicia S.A.S
+      responses:
+        '200':
+          description: Nombre de la franquicia actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FranchiseDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Franquicias
+      summary: Eliminar una franquicia por ID
+      operationId: deleteFranchise
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+      responses:
+        '204':
+          description: Franquicia eliminada exitosamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/franquicias/{id}/sucursales/producto-mayor-stock:
+    get:
+      tags:
+        - Franquicias
+      summary: Producto con mayor stock por sucursal de una franquicia
+      operationId: getProductWithHighestStockPerBranch
+      description: |
+        Retorna un listado consolidado con el producto de mayor stock en cada sucursal
+        perteneciente a la franquicia indicada. Si una sucursal no tiene productos,
+        se incluye en el listado con `products: null`.
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+      responses:
+        '200':
+          description: Listado de productos con mayor stock por sucursal
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductWithMoreStock'
+              example:
+                - branchName: Sucursal Norte
+                  products:
+                    - name: Hamburguesa Clásica
+                      stock: 150
+                - branchName: Sucursal Sur
+                  products: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/sucursales:
+    get:
+      tags:
+        - Sucursales
+      summary: Obtener todas las sucursales
+      operationId: getBranches
+      responses:
+        '200':
+          description: Lista de sucursales obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BranchDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Sucursales
+      summary: Crear una nueva sucursal
+      operationId: createBranch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchRequest'
+      responses:
+        '201':
+          description: Sucursal creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/sucursales/{id}:
+    get:
+      tags:
+        - Sucursales
+      summary: Obtener una sucursal por ID
+      operationId: getBranch
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      responses:
+        '200':
+          description: Sucursal encontrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Sucursales
+      summary: Actualizar una sucursal completa por ID
+      operationId: updateBranch
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchRequest'
+      responses:
+        '200':
+          description: Sucursal actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Sucursales
+      summary: Eliminar una sucursal por ID
+      operationId: deleteBranch
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      responses:
+        '204':
+          description: Sucursal eliminada exitosamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/sucursales/{id}/{field}:
+    patch:
+      tags:
+        - Sucursales
+      summary: Actualizar un campo específico de una sucursal
+      operationId: updateFieldBranch
+      description: |
+        Permite actualizar de forma parcial un campo de la sucursal.
+
+        **Campos permitidos:**
+        - `address` — Dirección de la sucursal (debe ser única)
+        - `name` — Nombre de la sucursal (debe ser único)
+        - `franchiseName` — Nombre de la franquicia a la que pertenece
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+        - name: field
+          in: path
+          required: true
+          description: Nombre del campo a actualizar
+          schema:
+            type: string
+            enum:
+              - address
+              - name
+              - franchiseName
+          example: name
+        - name: value
+          in: query
+          required: true
+          description: Nuevo valor para el campo especificado
+          schema:
+            type: string
+          example: Sucursal Centro
+      responses:
+        '200':
+          description: Campo actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/productos:
+    get:
+      tags:
+        - Productos
+      summary: Obtener todos los productos
+      operationId: getProducts
+      responses:
+        '200':
+          description: Lista de productos obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Productos
+      summary: Crear un nuevo producto
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        '201':
+          description: Producto creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/productos/{id}:
+    get:
+      tags:
+        - Productos
+      summary: Obtener un producto por ID
+      operationId: getProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Producto encontrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Productos
+      summary: Actualizar un producto completo por ID
+      operationId: updateProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        '200':
+          description: Producto actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Productos
+      summary: Eliminar un producto por ID
+      operationId: deleteProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '204':
+          description: Producto eliminado exitosamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/productos/{id}/{field}:
+    patch:
+      tags:
+        - Productos
+      summary: Actualizar un campo específico de un producto
+      operationId: patchProduct
+      description: |
+        Permite actualizar de forma parcial un campo del producto.
+
+        **Campos permitidos:**
+        - `name` — Nombre del producto
+        - `price` — Precio del producto (debe ser un número decimal válido y positivo)
+        - `stock` — Stock del producto (debe ser un número entero válido y positivo)
+        - `branch` — Nombre de la sucursal a la que pertenece el producto
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - name: field
+          in: path
+          required: true
+          description: Nombre del campo a actualizar
+          schema:
+            type: string
+            enum:
+              - name
+              - price
+              - stock
+              - branch
+          example: stock
+        - name: value
+          in: query
+          required: true
+          description: Nuevo valor para el campo especificado
+          schema:
+            type: string
+          example: '150'
+      responses:
+        '200':
+          description: Campo actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido desde POST /api/auth/login
+  schemas:
+    UserRequest:
+      type: object
+      description: Credenciales del usuario (password solo en escritura)
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          maxLength: 100
+          description: Nombre de usuario. No puede estar vacío.
+          example: john_doe
+        password:
+          type: string
+          maxLength: 100
+          writeOnly: true
+          description: Contraseña del usuario (solo escritura, nunca se retorna). No puede estar vacía.
+          example: secret123
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: john@example.com
+    UserDto:
+      type: object
+      description: Representación del usuario en respuestas (sin password)
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Identificador único del usuario
+          example: 123e4567-e89b-12d3-a456-426614174000
+        username:
+          type: string
+          maxLength: 100
+          example: john_doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+    ApiErrorResponse:
+      type: object
+      description: Estructura estándar de respuesta de error del GlobalExceptionHandler
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Fecha y hora en que ocurrió el error (formato yyyy-MM-dd'T'hh:mm:ss a)
+          example: 2024-01-15T10:30:00 AM
+        status:
+          type: integer
+          description: Código HTTP del error
+          example: 404
+        error:
+          type: string
+          description: Descripción estándar del código HTTP (HttpStatus.getReasonPhrase)
+          example: Not Found
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: El recurso solicitado no existe
+        path:
+          type: string
+          description: URI de la solicitud que generó el error
+          example: /api/sucursales/123e4567-e89b-12d3-a456-426614174000
+    TokenResponseDto:
+      type: object
+      description: Respuesta de autenticación con el token JWT
+      properties:
+        token:
+          type: string
+          description: Token JWT firmado para usar en el header Authorization
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type:
+          type: string
+          description: Tipo de token
+          example: bearer
+    FranchiseDto:
+      type: object
+      description: Representación completa de una franquicia
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Identificador único de la franquicia (solo lectura)
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia
+          example: Mi Franquicia S.A.S
+        owner:
+          type: string
+          maxLength: 100
+          description: Nombre del propietario de la franquicia
+          example: Juan Pérez
+    FranchiseRequest:
+      type: object
+      description: Cuerpo de solicitud para crear una franquicia
+      required:
+        - name
+        - owner
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia. No puede estar vacío.
+          example: Mi Franquicia S.A.S
+        owner:
+          type: string
+          maxLength: 100
+          description: Nombre del propietario. No puede estar vacío.
+          example: Juan Pérez
+    ProductStock:
+      type: object
+      description: Producto con su stock
+      properties:
+        name:
+          type: string
+          description: Nombre del producto
+          example: Hamburguesa Clásica
+        stock:
+          type: integer
+          description: Cantidad en stock
+          example: 150
+    ProductWithMoreStock:
+      type: object
+      description: Sucursal con su producto de mayor stock
+      properties:
+        branchName:
+          type: string
+          description: Nombre de la sucursal
+          example: Sucursal Norte
+        products:
+          type: array
+          nullable: true
+          description: Lista de productos con mayor stock. Null si la sucursal no tiene productos.
+          items:
+            $ref: '#/components/schemas/ProductStock'
+    BranchDto:
+      type: object
+      description: Representación completa de una sucursal
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Identificador único (solo lectura)
+          example: 123e4567-e89b-12d3-a456-426614174000
+        address:
+          type: string
+          maxLength: 100
+          description: Dirección de la sucursal
+          example: Calle 45
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la sucursal
+          example: Sucursal Norte
+        franchiseName:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia a la que pertenece
+          example: Mi Franquicia S.A.S
+    BranchRequest:
+      type: object
+      description: Cuerpo de solicitud para crear o actualizar una sucursal
+      required:
+        - address
+        - name
+        - franchiseName
+      properties:
+        address:
+          type: string
+          maxLength: 100
+          description: Dirección de la sucursal. No puede estar vacío.
+          example: Calle 45  12-30, Bogotá
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la sucursal. No puede estar vacío.
+          example: Sucursal Norte
+        franchiseName:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia existente a asociar. No puede estar vacío.
+          example: Mi Franquicia S.A.S
+    ProductDto:
+      type: object
+      description: Representación completa de un producto
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Identificador único del producto (solo lectura)
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre del producto
+          example: Hamburguesa Clásica
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Precio del producto (positivo o cero)
+          example: 15000
+        stock:
+          type: integer
+          minimum: 0
+          description: Stock disponible del producto (positivo o cero)
+          example: 100
+        branchName:
+          type: string
+          maxLength: 100
+          description: Nombre de la sucursal a la que pertenece
+          example: Sucursal Norte
+    ProductRequest:
+      type: object
+      description: Cuerpo de solicitud para crear o actualizar un producto
+      required:
+        - name
+        - branchName
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre del producto. No puede estar vacío.
+          example: Hamburguesa Clásica
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Precio del producto (positivo o cero)
+          example: 15000
+        stock:
+          type: integer
+          minimum: 0
+          description: Stock disponible del producto (positivo o cero)
+          example: 100
+        branchName:
+          type: string
+          maxLength: 100
+          description: Nombre de la sucursal existente a asociar. No puede estar vacío.
+          example: Sucursal Norte
+  responses:
+    BadRequest:
+      description: |
+        Solicitud inválida. Puede deberse a:
+        - Campos requeridos vacíos o nulos (`@NotBlank`, `@NotNull`)
+        - Valores que exceden la longitud máxima (`@Size`)
+        - Campo no existente o no modificable (PATCH)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          examples:
+            validationError:
+              summary: Error de validación de campo
+              value:
+                timestamp: 2024-01-15T10:30:00 AM
+                status: 400
+                error: Bad Request
+                message: La direccion de la sucursal no puede ser vacio
+                path: /api/sucursales
+            invalidField:
+              summary: Campo no modificable (PATCH)
+              value:
+                timestamp: 2024-01-15T10:30:00 AM
+                status: 400
+                error: Bad Request
+                message: EL campo no existe o no se puede modificar
+                path: /api/sucursales/{id}/{field}
+    Conflict:
+      description: El recurso ya existe en el sistema (valor duplicado)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            timestamp: 2024-01-15T10:30:00 AM
+            status: 409
+            error: Conflict
+            message: El nombre ya existe en el sistema
+            path: /api/sucursales
+    InternalServerError:
+      description: Error interno inesperado del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            timestamp: 2024-01-15T10:30:00 AM
+            status: 500
+            error: Internal Server Error
+            message: Ha ocurrido un error inesperado en el servidor. Por favor, intente más tarde.
+            path: /api/sucursales
+    Unauthorized:
+      description: |
+        No autenticado. El token JWT es inválido, está expirado o no fue enviado.
+        Incluir header: `Authorization: Bearer <token>`
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            timestamp: 2024-01-15T10:30:00 AM
+            status: 401
+            error: Unauthorized
+            message: Credenciales inválidas
+            path: /api/auth/login
+    NotFound:
+      description: El recurso solicitado no existe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            timestamp: 2024-01-15T10:30:00 AM
+            status: 404
+            error: Not Found
+            message: El recurso solicitado no existe
+            path: /api/sucursales/123e4567-e89b-12d3-a456-426614174000
+  parameters:
+    FranchiseId:
+      name: id
+      in: path
+      required: true
+      description: Identificador único UUID de la franquicia
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+    BranchId:
+      name: id
+      in: path
+      required: true
+      description: Identificador único UUID de la sucursal
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+    ProductId:
+      name: id
+      in: path
+      required: true
+      description: Identificador único UUID del producto
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000

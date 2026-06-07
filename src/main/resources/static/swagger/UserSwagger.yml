@@ -1,0 +1,112 @@
+paths:
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Usuarios
+      summary: Registrar un nuevo usuario
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          $ref: './Common.yml#/components/responses/BadRequest'
+        '409':
+          $ref: './Common.yml#/components/responses/Conflict'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Usuarios
+      summary: Autenticarse y obtener token JWT
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Autenticación exitosa. Retorna el token JWT Bearer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponseDto'
+        '400':
+          $ref: './Common.yml#/components/responses/BadRequest'
+        '401':
+          $ref: './Common.yml#/components/responses/Unauthorized'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    UserRequest:
+      type: object
+      description: Credenciales del usuario (password solo en escritura)
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          maxLength: 100
+          description: Nombre de usuario. No puede estar vacío.
+          example: john_doe
+        password:
+          type: string
+          maxLength: 100
+          writeOnly: true
+          description: Contraseña del usuario (solo escritura, nunca se retorna). No puede estar vacía.
+          example: secret123
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: john@example.com
+
+    UserDto:
+      type: object
+      description: Representación del usuario en respuestas (sin password)
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Identificador único del usuario
+          example: 123e4567-e89b-12d3-a456-426614174000
+        username:
+          type: string
+          maxLength: 100
+          example: john_doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+
+    TokenResponseDto:
+      type: object
+      description: Respuesta de autenticación con el token JWT
+      properties:
+        token:
+          type: string
+          description: Token JWT firmado para usar en el header Authorization
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type:
+          type: string
+          description: Tipo de token
+          example: bearer

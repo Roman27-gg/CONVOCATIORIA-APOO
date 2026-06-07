@@ -47,7 +47,8 @@ public class UserServiceImplement implements UserService {
         } catch (AuthenticationException e) {
             throw new BadCredentialsException("Credenciales inválidas");
         }
-        User user = (User) authentication.getPrincipal();
+        org.springframework.security.core.userdetails.User user =
+                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
         String token = jwtUtils.generateToken(
                 user.getUsername(), Map.of());
         return new TokenResponseDto(token, "bearer");

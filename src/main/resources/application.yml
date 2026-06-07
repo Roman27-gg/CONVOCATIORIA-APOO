@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: sucursales
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+api:
+  jwt:
+    expiration-time: ${JWT_EXPIRED}
+    secret: ${JWT_SECRET}
+springdoc:
+  api-docs:
+    enabled: true
+  packages-to-scan: "com.ut.empty"
+  swagger-ui:
+    path: /swagger
+    url: /openapi.yaml

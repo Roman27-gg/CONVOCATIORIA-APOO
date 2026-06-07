@@ -1,0 +1,231 @@
+paths:
+  /api/franquicias:
+    get:
+      tags:
+        - Franquicias
+      summary: Obtener todas las franquicias
+      operationId: getFranchises
+      responses:
+        '200':
+          description: Lista de franquicias obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FranchiseDto'
+        '401':
+          $ref: './Common.yml#/components/responses/Unauthorized'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Franquicias
+      summary: Crear una nueva franquicia
+      operationId: createFranchise
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FranchiseRequest'
+      responses:
+        '201':
+          description: Franquicia creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FranchiseDto'
+        '400':
+          $ref: './Common.yml#/components/responses/BadRequest'
+        '401':
+          $ref: './Common.yml#/components/responses/Unauthorized'
+        '409':
+          $ref: './Common.yml#/components/responses/Conflict'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+  /api/franquicias/{id}:
+    get:
+      tags:
+        - Franquicias
+      summary: Obtener una franquicia por ID
+      operationId: getFranchise
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+      responses:
+        '200':
+          description: Franquicia encontrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FranchiseDto'
+        '401':
+          $ref: './Common.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+    patch:
+      tags:
+        - Franquicias
+      summary: Modificar el nombre de una franquicia
+      operationId: modifyFranchiseName
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+        - name: name
+          in: query
+          required: true
+          description: Nuevo nombre para la franquicia (debe ser único)
+          schema:
+            type: string
+          example: Nueva Franquicia S.A.S
+      responses:
+        '200':
+          description: Nombre de la franquicia actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FranchiseDto'
+        '401':
+          $ref: './Common.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '409':
+          $ref: './Common.yml#/components/responses/Conflict'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Franquicias
+      summary: Eliminar una franquicia por ID
+      operationId: deleteFranchise
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+      responses:
+        '204':
+          description: Franquicia eliminada exitosamente
+        '401':
+          $ref: './Common.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+  /api/franquicias/{id}/sucursales/producto-mayor-stock:
+    get:
+      tags:
+        - Franquicias
+      summary: Producto con mayor stock por sucursal de una franquicia
+      operationId: getProductWithHighestStockPerBranch
+      description: |
+        Retorna un listado consolidado con el producto de mayor stock en cada sucursal
+        perteneciente a la franquicia indicada. Si una sucursal no tiene productos,
+        se incluye en el listado con `products: null`.
+      parameters:
+        - $ref: '#/components/parameters/FranchiseId'
+      responses:
+        '200':
+          description: Listado de productos con mayor stock por sucursal
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductWithMoreStock'
+              example:
+                - branchName: Sucursal Norte
+                  products:
+                    - name: Hamburguesa Clásica
+                      stock: 150
+                - branchName: Sucursal Sur
+                  products: null
+        '401':
+          $ref: './Common.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    FranchiseId:
+      name: id
+      in: path
+      required: true
+      description: Identificador único UUID de la franquicia
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+
+  schemas:
+    FranchiseDto:
+      type: object
+      description: Representación completa de una franquicia
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Identificador único de la franquicia (solo lectura)
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia
+          example: Mi Franquicia S.A.S
+        owner:
+          type: string
+          maxLength: 100
+          description: Nombre del propietario de la franquicia
+          example: Juan Pérez
+
+    FranchiseRequest:
+      type: object
+      description: Cuerpo de solicitud para crear una franquicia
+      required:
+        - name
+        - owner
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia. No puede estar vacío.
+          example: Mi Franquicia S.A.S
+        owner:
+          type: string
+          maxLength: 100
+          description: Nombre del propietario. No puede estar vacío.
+          example: Juan Pérez
+
+    ProductWithMoreStock:
+      type: object
+      description: Sucursal con su producto de mayor stock
+      properties:
+        branchName:
+          type: string
+          description: Nombre de la sucursal
+          example: Sucursal Norte
+        products:
+          type: array
+          nullable: true
+          description: Lista de productos con mayor stock. Null si la sucursal no tiene productos.
+          items:
+            $ref: '#/components/schemas/ProductStock'
+
+    ProductStock:
+      type: object
+      description: Producto con su stock
+      properties:
+        name:
+          type: string
+          description: Nombre del producto
+          example: Hamburguesa Clásica
+        stock:
+          type: integer
+          description: Cantidad en stock
+          example: 150

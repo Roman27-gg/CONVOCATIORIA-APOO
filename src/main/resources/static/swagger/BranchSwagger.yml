@@ -1,0 +1,217 @@
+paths:
+  /api/sucursales:
+    get:
+      tags:
+        - Sucursales
+      summary: Obtener todas las sucursales
+      operationId: getBranches
+      responses:
+        '200':
+          description: Lista de sucursales obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BranchDto'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Sucursales
+      summary: Crear una nueva sucursal
+      operationId: createBranch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchRequest'
+      responses:
+        '201':
+          description: Sucursal creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '400':
+          $ref: './Common.yml#/components/responses/BadRequest'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+  /api/sucursales/{id}:
+    get:
+      tags:
+        - Sucursales
+      summary: Obtener una sucursal por ID
+      operationId: getBranch
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      responses:
+        '200':
+          description: Sucursal encontrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Sucursales
+      summary: Actualizar una sucursal completa por ID
+      operationId: updateBranch
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchRequest'
+      responses:
+        '200':
+          description: Sucursal actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '400':
+          $ref: './Common.yml#/components/responses/BadRequest'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Sucursales
+      summary: Eliminar una sucursal por ID
+      operationId: deleteBranch
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+      responses:
+        '204':
+          description: Sucursal eliminada exitosamente
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+  /api/sucursales/{id}/{field}:
+    patch:
+      tags:
+        - Sucursales
+      summary: Actualizar un campo específico de una sucursal
+      operationId: updateFieldBranch
+      description: |
+        Permite actualizar de forma parcial un campo de la sucursal.
+
+        **Campos permitidos:**
+        - `address` — Dirección de la sucursal (debe ser única)
+        - `name` — Nombre de la sucursal (debe ser único)
+        - `franchiseName` — Nombre de la franquicia a la que pertenece
+      parameters:
+        - $ref: '#/components/parameters/BranchId'
+        - name: field
+          in: path
+          required: true
+          description: Nombre del campo a actualizar
+          schema:
+            type: string
+            enum:
+              - address
+              - name
+              - franchiseName
+          example: name
+        - name: value
+          in: query
+          required: true
+          description: Nuevo valor para el campo especificado
+          schema:
+            type: string
+          example: Sucursal Centro
+      responses:
+        '200':
+          description: Campo actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchDto'
+        '400':
+          $ref: './Common.yml#/components/responses/BadRequest'
+        '404':
+          $ref: './Common.yml#/components/responses/NotFound'
+        '409':
+          $ref: './Common.yml#/components/responses/Conflict'
+        '500':
+          $ref: './Common.yml#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    BranchId:
+      name: id
+      in: path
+      required: true
+      description: Identificador único UUID de la sucursal
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+
+  schemas:
+    BranchDto:
+      type: object
+      description: Representación completa de una sucursal
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Identificador único (solo lectura)
+          example: 123e4567-e89b-12d3-a456-426614174000
+        address:
+          type: string
+          maxLength: 100
+          description: Dirección de la sucursal
+          example: Calle 45 # 12-30, Bogotá
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la sucursal
+          example: Sucursal Norte
+        franchiseName:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia a la que pertenece
+          example: Mi Franquicia S.A.S
+
+    BranchRequest:
+      type: object
+      description: Cuerpo de solicitud para crear o actualizar una sucursal
+      required:
+        - address
+        - name
+        - franchiseName
+      properties:
+        address:
+          type: string
+          maxLength: 100
+          description: Dirección de la sucursal. No puede estar vacío.
+          example: Calle 45  12-30, Bogotá
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre de la sucursal. No puede estar vacío.
+          example: Sucursal Norte
+        franchiseName:
+          type: string
+          maxLength: 100
+          description: Nombre de la franquicia existente a asociar. No puede estar vacío.
+          example: Mi Franquicia S.A.S

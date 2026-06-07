@@ -40,7 +40,7 @@ public class FranchiseServiceImpl implements FranchiseService {
 
     @Override
     public FranchiseDto createFranchise(FranchiseDto franchiseDto) {
-        if (franchiseRepository.existByName(franchiseDto.name())) throw new ConflictException("La franquicia que intenta registrar ya existe");
+        if (franchiseRepository.existsByName(franchiseDto.name())) throw new ConflictException("La franquicia que intenta registrar ya existe");
         Franchise franchise = franchiseMapper.toEntity(franchiseDto);
         franchiseRepository.save(franchise);
         return franchiseMapper.toDto(franchise);
@@ -54,7 +54,7 @@ public class FranchiseServiceImpl implements FranchiseService {
 
     @Override
     public FranchiseDto modifyName(UUID id, String name) throws ConflictException {
-        if(franchiseRepository.existByName(name)) throw new ConflictException("El nombre ya esta en uso");
+        if(franchiseRepository.existsByName(name)) throw new ConflictException("El nombre ya esta en uso");
         Franchise franchise = existById(id);
         franchise.setName(name);
         franchiseRepository.save(franchise);

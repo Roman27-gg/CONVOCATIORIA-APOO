@@ -1,0 +1,73 @@
+openapi: 3.0.3
+info:
+  title: Convocatoria APO API
+  description: |
+    API REST para la gestión de franquicias, sucursales y productos.
+    
+    ## Autenticación
+    Esta API utiliza **JWT Bearer Token**. Para acceder a los endpoints protegidos:
+    1. Obtén un token desde `POST /api/auth/login`
+    2. Incluye el token en el header `Authorization: Bearer <token>`
+    
+    ## Módulos
+    - **Usuarios** — Autenticación y generación de tokens JWT
+    - **Franquicias** — Gestión de franquicias
+    - **Sucursales** — Gestión de sucursales asociadas a franquicias
+    - **Productos** — Gestión de productos asociados a sucursales
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local (Docker)
+
+tags:
+  - name: Usuarios
+    description: Endpoints de autenticación
+  - name: Franquicias
+    description: Gestión de franquicias
+  - name: Sucursales
+    description: Gestión de sucursales
+  - name: Productos
+    description: Gestión de productos
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ── Usuarios ──────────────────────────────────────────
+  /api/v1/auth/register:
+    $ref: './swagger/UserSwagger.yml#/paths/~1api~1v1~1auth~1register'
+  /api/v1/auth/login:
+    $ref: './swagger/UserSwagger.yml#/paths/~1api~1v1~1auth~1login'
+
+  # ── Franquicias ───────────────────────────────────────
+  /api/franquicias:
+    $ref: './swagger/FranchiseSwagger.yml#/paths/~1api~1franquicias'
+  /api/franquicias/{id}:
+    $ref: './swagger/FranchiseSwagger.yml#/paths/~1api~1franquicias~1%7Bid%7D'
+  /api/franquicias/{id}/sucursales/producto-mayor-stock:
+    $ref: './swagger/FranchiseSwagger.yml#/paths/~1api~1franquicias~1%7Bid%7D~1sucursales~1producto-mayor-stock'
+
+  # ── Sucursales ────────────────────────────────────────
+  /api/sucursales:
+    $ref: './swagger/BranchSwagger.yml#/paths/~1api~1sucursales'
+  /api/sucursales/{id}:
+    $ref: './swagger/BranchSwagger.yml#/paths/~1api~1sucursales~1%7Bid%7D'
+  /api/sucursales/{id}/{field}:
+    $ref: './swagger/BranchSwagger.yml#/paths/~1api~1sucursales~1%7Bid%7D~1%7Bfield%7D'
+
+  # ── Productos ─────────────────────────────────────────
+  /api/productos:
+    $ref: './swagger/ProductsSwagger.yml#/paths/~1api~1productos'
+  /api/productos/{id}:
+    $ref: './swagger/ProductsSwagger.yml#/paths/~1api~1productos~1%7Bid%7D'
+  /api/productos/{id}/{field}:
+    $ref: './swagger/ProductsSwagger.yml#/paths/~1api~1productos~1%7Bid%7D~1%7Bfield%7D'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido desde POST /api/auth/login
